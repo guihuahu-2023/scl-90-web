@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>SCL-90 心理自查 · 温柔版 | 设计：那年的雪糕</title>
+<meta name="description" content="基于 SCL-90 症状自评量表的温柔自查小工具，由「那年的雪糕」设计。" />
+<style>
+  :root{
+    --bg1:#FFF6F3; --bg2:#FBE9EE; --bg3:#F3F0FA;
+    --ink:#4A3B47; --ink2:#8A7480; --ink3:#B9A6B0;
+    --rose:#E0597B; --rose-d:#C4415F; --rose-l:#F9D9E0; --rose-xl:#FDF0F3;
+    --mint:#7FC8B6; --mint-l:#E4F5F0;
+    --lav:#9B7FC7; --lav-l:#EFE8FB;
+    --amber:#F2B76B; --amber-l:#FBEEDC;
+    --card:#FFFFFF;
+    --shadow:0 10px 30px rgba(224,89,123,.10), 0 2px 8px rgba(224,89,123,.06);
+    --r:22px;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html{scroll-behavior:smooth;}
+  body{
+    margin:0; color:var(--ink);
+    font-family:"PingFang SC","Hiragino Sans GB","Microsoft YaHei","Noto Sans SC",sans-serif;
+    background:
+      radial-gradient(600px 420px at 8% -5%, #FFE3EA 0%, transparent 60%),
+      radial-gradient(700px 520px at 105% 12%, #EFE5FB 0%, transparent 55%),
+      radial-gradient(640px 460px at 50% 118%, #DDF2EC 0%, transparent 60%),
+      linear-gradient(180deg, var(--bg1) 0%, var(--bg2) 60%, #F7EDEC 100%);
+    background-attachment:fixed;
+    line-height:1.7;
+  }
+  .petals{position:fixed; inset:0; pointer-events:none; z-index:0; overflow:hidden;}
+  .petals span{position:absolute; font-size:22px; opacity:.16; animation:fall linear infinite;}
+  @keyframes fall{
+    0%{transform:translateY(-6vh) rotate(0deg);}
+    100%{transform:translateY(106vh) rotate(340deg);}
+  }
+  .wrap{position:relative; z-index:1; max-width:780px; margin:0 auto; padding:0 16px 140px;}
+
+  /* ---------- cover ---------- */
+  .cover{padding-top:48px; text-align:center;}
+  .cover .halo{width:120px;height:120px;margin:0 auto 18px;border-radius:50%;
+    background:radial-gradient(circle at 35% 30%, #FFF 0%, var(--rose-l) 45%, #F7C6D4 100%);
+    box-shadow:var(--shadow); display:flex;align-items:center;justify-content:center;font-size:52px;}
+  .cover h1{font-size:34px; margin:8px 0 4px; letter-spacing:2px;}
+  .cover h1 em{font-style:normal; color:var(--rose);}
+  .cover .sub{color:var(--ink2); font-size:15px; margin:0 0 20px;}
+  .sticker-row{display:flex; gap:10px; justify-content:center; flex-wrap:wrap; margin:14px 0 26px;}
+  .sticker{background:#fff;border:1.5px dashed var(--rose-l);color:var(--rose-d);
+    padding:6px 14px;border-radius:999px;font-size:13px; box-shadow:0 4px 12px rgba(224,89,123,.08);}
+  .intro{background:var(--card); border-radius:var(--r); box-shadow:var(--shadow);
+    padding:22px 24px; text-align:left; position:relative; overflow:hidden;}
+  .intro::after{content:""; position:absolute; right:-30px; top:-30px; width:110px; height:110px;
+    border-radius:50%; background:radial-gradient(circle, var(--rose-xl) 0%, transparent 70%);}
+  .intro h2{margin:0 0 10px; font-size:18px; color:var(--rose-d);}
+  .intro ul{margin:0; padding-left:2px; list-style:none;}
+  .intro li{padding:7px 0 7px 28px; position:relative; font-size:14.5px; color:var(--ink2); border-bottom:1px dotted #F5E0E7;}
+  .intro li:last-child{border-bottom:none;}
+  .intro li::before{content:"🌸"; position:absolute; left:0; font-size:13px;}
+  .cta{display:flex; gap:12px; justify-content:center; margin:26px 0 10px; flex-wrap:wrap;}
+  .btn{border:none; cursor:pointer; font-size:15px; font-weight:600; border-radius:999px;
+    padding:13px 30px; transition:.25s; font-family:inherit;}
+  .btn-primary{background:linear-gradient(135deg, var(--rose) 0%, #EE8CA6 100%); color:#fff;
+    box-shadow:0 8px 20px rgba(224,89,123,.32);}
+  .btn-primary:hover{transform:translateY(-2px); box-shadow:0 12px 26px rgba(224,89,123,.4);}
+  .btn-ghost{background:#fff; color:var(--rose-d); border:1.5px solid var(--rose-l);}
+  .btn-ghost:hover{background:var(--rose-xl);}
+  .fineprint{text-align:center; color:var(--ink3); font-size:12.5px; margin-top:14px;}
+  .footer{text-align:center; color:var(--ink3); font-size:12.5px; margin-top:56px;}
+  .footer b{color:var(--rose); font-weight:600;}
+
+  /* ---------- quiz ---------- */
+  .quiz-head{position:sticky; top:0; z-index:5; padding:14px 0 12px;
+    background:linear-gradient(180deg, rgba(255,246,243,.96) 80%, rgba(255,246,243,0));}
+  .quiz-head .top{display:flex; align-items:center; justify-content:space-between; margin-bottom:8px;}
+  .q-title{font-size:15px; font-weight:700;}
+  .q-title small{color:var(--ink3); font-weight:400; margin-left:6px;}
+  .pct{font-size:14px; font-weight:700; color:var(--rose); background:#fff; border:1.5px solid var(--rose-l);
+    padding:3px 12px; border-radius:999px;}
+  .bar{height:10px; background:#fff; border-radius:99px; overflow:hidden; box-shadow:inset 0 1px 3px rgba(224,89,123,.12);}
+  .bar i{display:block; height:100%; width:0%; border-radius:99px;
+    background:linear-gradient(90deg, var(--rose) 0%, #F5A8C0 60%, var(--mint) 130%);
+    transition:width .35s ease;}
+
+  .tip{background:linear-gradient(135deg, var(--mint-l) 0%, #FFF 70%); border:1.5px dashed #BFE5DA;
+    border-radius:18px; padding:14px 18px; font-size:13.5px; color:#4E6B62; margin:14px 0 20px;}
+  .tip b{color:#2F6B5A;}
+
+  .q-card{background:var(--card); border-radius:var(--r); box-shadow:0 4px 16px rgba(224,89,123,.07);
+    padding:18px 20px 16px; margin-bottom:16px; border:1.5px solid transparent; transition:.25s;}
+  .q-card.answered{border-color:var(--rose-l); background:linear-gradient(180deg,#FFF 0%, var(--rose-xl) 100%);}
+  .q-card.shake{animation:shake .4s;}
+  @keyframes shake{0%,100%{transform:translateX(0)} 25%{transform:translateX(-7px)} 50%{transform:translateX(7px)} 75%{transform:translateX(-4px)}}
+  .q-top{display:flex; align-items:flex-start; gap:10px; margin-bottom:12px;}
+  .q-no{flex:0 0 auto; width:34px; height:34px; border-radius:12px; background:var(--rose-xl);
+    color:var(--rose-d); font-weight:800; font-size:15px; display:flex; align-items:center; justify-content:center;
+    border:1.5px solid var(--rose-l);}
+  .q-tag{flex:1; font-size:15.5px; font-weight:600; color:var(--ink); padding-top:4px; min-width:0;}
+  .opts{display:grid; grid-template-columns:repeat(5,1fr); gap:8px;}
+  @media (max-width:560px){ .opts{grid-template-columns:repeat(5,1fr); gap:5px;} .opt .txt{font-size:12px;} }
+  .opt{position:relative; cursor:pointer;}
+  .opt input{position:absolute; opacity:0; inset:0; cursor:pointer;}
+  .opt .box{border-radius:14px; border:1.5px solid #F3E2E8; background:#FDFBFB; padding:9px 4px 8px;
+    text-align:center; transition:.18s;}
+  .opt .dot{width:10px; height:10px; border-radius:50%; margin:0 auto 5px; background:#E8D3DB; transition:.18s;}
+  .opt .num{font-size:17px; font-weight:800; color:#C7AEBB; line-height:1.1; transition:.18s;}
+  .opt .txt{font-size:12.5px; color:var(--ink2); transition:.18s;}
+  .opt:hover .box{border-color:var(--rose-l); transform:translateY(-2px);}
+  .opt input:checked + .box{background:linear-gradient(135deg, var(--rose) 0%, #F08CA6 100%);
+    border-color:transparent; box-shadow:0 6px 14px rgba(224,89,123,.35); transform:translateY(-2px);}
+  .opt input:checked + .box .dot{background:#FFF;}
+  .opt input:checked + .box .num, .opt input:checked + .box .txt{color:#fff;}
+
+  .dock{position:fixed; left:0; right:0; bottom:0; z-index:6;}
+  .dock-in{max-width:780px; margin:0 auto; padding:10px 16px calc(10px + env(safe-area-inset-bottom));
+    background:rgba(255,255,255,.92); backdrop-filter:blur(14px); border-top:1.5px solid #F7E2EA; box-shadow:0 -8px 24px rgba(224,89,123,.10);}
+  .dock-row{display:flex; gap:10px; align-items:center;}
+  .dock-row .btn{flex:1; white-space:nowrap;}
+  .dock-hint{font-size:12px; color:var(--ink3); text-align:center; margin-top:6px;}
+  .btn[disabled]{opacity:.55; cursor:not-allowed; transform:none !important; box-shadow:none;}
+
+  /* ---------- result ---------- */
+  .res-head{background:var(--card); border-radius:26px; box-shadow:var(--shadow); padding:28px 24px 24px; text-align:center; position:relative; overflow:hidden;}
+  .res-head::before{content:""; position:absolute; left:-40px; top:-40px; width:140px; height:140px; border-radius:50%; background:radial-gradient(circle, var(--lav-l) 0%, transparent 70%);}
+  .res-head::after{content:""; position:absolute; right:-40px; bottom:-40px; width:140px; height:140px; border-radius:50%; background:radial-gradient(circle, var(--mint-l) 0%, transparent 70%);}
+  .res-head .kicker{font-size:13px; color:var(--ink3); letter-spacing:3px;}
+  .score-big{font-size:64px; font-weight:800; color:var(--rose); line-height:1.05; margin:6px 0 2px;}
+  .score-cap{font-size:13.5px; color:var(--ink2);}
+  .res-tier{display:inline-block; margin:16px auto 10px; padding:8px 20px; border-radius:999px; font-size:14.5px; font-weight:700;}
+  .tier-0{background:var(--mint-l); color:#2F6B5A;}
+  .tier-1{background:var(--amber-l); color:#8C6420;}
+  .tier-2{background:var(--rose-l); color:var(--rose-d);}
+  .tier-3{background:#FADCE4; color:#A63450;}
+  .tier-4{background:#F3D2DC; color:#7E2440;}
+  .res-summary{font-size:14.5px; color:var(--ink2); max-width:520px; margin:8px auto 0;}
+
+  .stats{display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin:18px 0;}
+  @media (max-width:560px){ .stats{grid-template-columns:repeat(2,1fr);} }
+  .stat{background:#fff; border-radius:18px; box-shadow:0 4px 14px rgba(224,89,123,.07); padding:14px 10px; text-align:center; border:1.5px solid #FBEFF4;}
+  .stat .v{font-size:24px; font-weight:800; color:var(--ink);}
+  .stat .v.warn{color:var(--rose-d);}
+  .stat .k{font-size:12px; color:var(--ink3); margin-top:2px;}
+
+  .sec-title{display:flex; align-items:center; gap:8px; font-size:17px; font-weight:800; margin:26px 0 14px;}
+  .sec-title::after{content:""; flex:1; border-top:1.5px dashed var(--rose-l);}
+  .f-card{background:#fff; border-radius:20px; box-shadow:0 4px 14px rgba(224,89,123,.07); padding:16px 18px; margin-bottom:12px; border:1.5px solid #FBEFF4; transition:.2s;}
+  .f-card.alert{border-color:#F5C4D4; background:linear-gradient(180deg,#FFF 0%, #FFF6F9 100%);}
+  .f-top{display:flex; align-items:center; gap:10px; margin-bottom:10px;}
+  .f-emoji{font-size:20px;}
+  .f-name{font-weight:700; font-size:15px;}
+  .f-name small{display:block; font-weight:400; color:var(--ink3); font-size:11.5px;}
+  .f-score{margin-left:auto; font-size:22px; font-weight:800; color:var(--ink);}
+  .f-score.warn{color:var(--rose-d);}
+  .f-chip{font-size:11.5px; font-weight:700; padding:3px 10px; border-radius:999px;}
+  .chip-ok{background:var(--mint-l); color:#2F6B5A;}
+  .chip-mid{background:var(--amber-l); color:#8C6420;}
+  .chip-hi{background:#FADCE4; color:#A63450;}
+  .f-bar{position:relative; height:12px; background:#FBEFF4; border-radius:99px;}
+  .f-bar i{position:absolute; left:0; top:0; bottom:0; border-radius:99px;
+    background:linear-gradient(90deg, var(--mint) 0%, var(--amber) 60%, var(--rose) 100%); transition:width .8s ease;}
+  .f-mark{position:absolute; top:-5px; bottom:-5px; width:2.5px; border-radius:2px; background:var(--ink3); opacity:.55;}
+  .f-mark.hl{background:var(--rose-d); opacity:.9;}
+  .f-note{font-size:12px; color:var(--ink3); margin-top:8px;}
+  .f-desc{font-size:13px; color:var(--ink2); margin-top:8px;}
+
+  .notice{background:linear-gradient(135deg, var(--rose-xl) 0%, #FFF 70%); border:1.5px dashed var(--rose-l);
+    border-radius:20px; padding:18px 20px; font-size:13.5px; color:var(--ink2); margin-top:20px;}
+  .notice b{color:var(--rose-d);}
+  .res-actions{display:flex; gap:10px; justify-content:center; flex-wrap:wrap; margin-top:24px;}
+
+  .hidden{display:none !important;}
+  @media print{
+    .petals,.dock,.quiz-head,.res-actions,.cta{display:none !important;}
+    body{background:#fff;}
+    .q-card,.f-card,.res-head,.stats{box-shadow:none; border:1px solid #E7D3DB;}
+  }
+</style>
+</head>
+<body>
+<div class="petals" id="petals"></div>
+<div class="wrap">
+
+  <!-- 封面 -->
+  <section id="page-cover" class="cover">
+    <div class="halo">🍦</div>
+    <h1>SCL-90 <em>心理自查</em></h1>
+    <p class="sub">温柔地，了解一下最近一周的自己 · 全程匿名、结果只属于你</p>
+    <div class="sticker-row">
+      <span class="sticker">⏱ 约需 10–15 分钟</span>
+      <span class="sticker">📝 90 道题 · 10 个维度</span>
+      <span class="sticker">🔒 本地保存 · 不上传</span>
+    </div>
+
+    <div class="intro">
+      <h2>🌷 开始前，想对你说</h2>
+      <ul>
+        <li>题目围绕<b>最近一周</b>的真实感受，请凭第一感觉作答，没有对错。</li>
+        <li>本工具基于国际通用的 <b>SCL-90 症状自评量表</b>（90 项 · 0–4 五级评分），采用 10 个因子评分与中国正常人群常模。</li>
+        <li>结果仅供自我觉察参考，<b>不能替代专业诊断</b>。若分数较高，建议寻求学校/医院心理中心的帮助。</li>
+        <li>你的作答只保存在这台设备上，不会上传或分享给任何人。</li>
+      </ul>
+    </div>
+
+    <div class="cta">
+      <button class="btn btn-primary" id="btn-start">开始测试 🌸</button>
+      <button class="btn btn-ghost hidden" id="btn-resume">继续上次的作答</button>
+    </div>
+    <p class="fineprint">* 若感觉当下状态很差或难以安心，请先照顾好自己的安全，测试可以之后再做。</p>
+  </section>
+
+  <!-- 答题 -->
+  <section id="page-quiz" class="hidden">
+    <div class="quiz-head">
+      <div class="top">
+        <div class="q-title">SCL-90 症状自查 <small>最近一周</small></div>
+        <div class="pct" id="pct">0%</div>
+      </div>
+      <div class="bar"><i id="barFill"></i></div>
+    </div>
+    <div class="tip">🍃 请根据 <b>最近一周</b> 里这些问题影响你的程度选择。<b>0=从无 → 4=严重</b>，请相信第一直觉。</div>
+    <div id="qlist"></div>
+    <div class="dock">
+      <div class="dock-in">
+        <div class="dock-row">
+          <button class="btn btn-ghost" id="btn-save-quit">💾 保存并退出</button>
+          <button class="btn btn-primary" id="btn-submit">查看结果 ✨</button>
+        </div>
+        <div class="dock-hint" id="dockHint">已答 0 / 90 · 进度自动保存在本机</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 结果 -->
+  <section id="page-result" class="hidden"></section>
+
+  <div class="footer">设计 &amp; 整理 · <b>那年的雪糕</b> · 本页面由 SCL-90 量表标准评分法整理而成，仅供自我了解参考</div>
+</div>
+
+<script>
+"use strict";
+/* ===== SCL-90 标准数据（90 项 + 10 因子，0-4 五级评分） ===== */
+const QUESTIONS = [
+"头痛","神经过敏，心中不踏实","头脑中有不必要的想法或字句盘旋","头昏或昏倒","对异性的兴趣减退",
+"对旁人责备求全","感到别人能控制自己的思想","责怪别人制造麻烦","忘性大","担心自己的衣饰整齐及仪态的端正",
+"容易烦恼和激动","胸痛","害怕空旷的场所或街道","感到自己的精力下降，活动减慢","想结束自己的生命",
+"听到旁人听不到的声音","发抖","感到大多数人都不可信任","胃口不好","容易哭泣",
+"同异性相处时感到害羞不自在","受骗，中了圈套或有人想抓住你","无缘无故地突然感到害怕","自己不能控制地大发脾气","怕单独出门",
+"经常责怪自己","腰痛","感到难以完成任务","感到孤独","感到苦闷",
+"过分担忧","对事物不感兴趣","感到害怕","我的感情容易受到伤害","旁人能知道自己的私下想法",
+"感到别人不理解自己、不同情自己","感到人们对自己不友好、不喜欢自己","做事必须做得很慢，以保证做得正确","心跳得很厉害","恶心或胃部不舒服",
+"感到比不上他人","肌肉酸痛","感到有人在监视自己、谈论自己","难以入睡","做事必须反复检查",
+"难以作出决定","怕乘电车、公共汽车、地铁或火车","呼吸有困难","一阵阵发冷或发热","因为感到害怕而避开某些东西、场合或活动",
+"脑子变空了","身体发麻或刺痛","喉咙有梗塞感","感到前途没有希望","不能集中注意",
+"感到身体的某一部分软弱无力","感到紧张或容易紧张","感到手或脚发重","想到死亡的事","吃得太多",
+"当别人看着自己或谈论自己时感到不自在","有一些不属于自己的想法","有想打人或伤害他人的冲动","醒得太早","必须反复洗手、点数目或触摸某些东西",
+"睡得不稳不深","有想摔坏或破坏东西的冲动","有一些别人没有的想法或念头","感到对别人神经过敏","在商店或电影院等人多的地方感到不自在",
+"感到任何事情都很困难","一阵阵恐惧或惊恐","感到在公共场合吃东西很不舒服","经常与人争论","单独一人时神经很紧张",
+"别人对自己的成绩没有作出恰当的评价","即使和别人在一起也感到孤单","感到坐立不安心神不定","感到自己没有什么价值","感到熟悉的东西变成陌生或不像真的",
+"大叫或摔东西","害怕会在公共场合昏倒","感到别人想占自己的便宜","为一些有关性的想法而很苦恼","认为自己应该因为自己的过错而受到惩罚",
+"感到要赶快把事情做完","感到自己的身体有严重问题","从未感到和其他人很亲近","感到自己有罪","感到自己的脑子有毛病"
+];
+
+/* 因子：ids(0-based), 中国正常常模 X / SD（用于「偏高线」X 与「关注线」X+SD） */
+const FACTORS = [
+{key:"som",  name:"躯体化",       emoji:"🫧", ids:[0,3,11,26,39,41,47,48,51,52,55,57], x:1.37, sd:0.48,
+ desc:"反映身体不适感，如头痛、背痛、肌肉酸痛、胸闷、恶心等躯体主诉。"},
+{key:"obs",  name:"强迫症状",     emoji:"🔁", ids:[2,8,9,27,37,44,45,50,54,64], x:1.62, sd:0.58,
+ desc:"明知没有必要却难以摆脱的无意义想法、冲动或重复行为，以及注意、认知方面的困难。"},
+{key:"ise",  name:"人际敏感",     emoji:"🫂", ids:[5,20,33,35,36,40,60,68,72], x:1.65, sd:0.61,
+ desc:"人际交往中的不自在与自卑感，对他人评价敏感、消极期待明显。"},
+{key:"dep",  name:"抑郁",         emoji:"🌥️", ids:[4,13,14,19,21,25,28,29,30,31,53,70,78], x:1.50, sd:0.59,
+ desc:"苦闷的心境、兴趣与动力减退、悲观失望，以及与抑郁相关的认知和躯体感受。"},
+{key:"anx",  name:"焦虑",         emoji:"🌀", ids:[1,16,22,32,38,56,71,77,79,85], x:1.39, sd:0.43,
+ desc:"烦躁、坐立不安、神经过敏、紧张及相应的躯体表现（如发抖、心悸）。"},
+{key:"hos",  name:"敌对",         emoji:"⚡", ids:[10,23,62,66,73,80], x:1.46, sd:0.55,
+ desc:"厌烦、摔物、争论乃至不能控制的脾气爆发等敌对表现（思想、情感与行为三方面）。"},
+{key:"par",  name:"恐怖",         emoji:"🚪", ids:[12,24,46,49,69,74,81], x:1.23, sd:0.41,
+ desc:"对空旷场所、人群、交通工具等特定情境的恐惧，以及社交恐怖。"},
+{key:"per",  name:"偏执",         emoji:"🕵️", ids:[7,17,42,67,75,82], x:1.43, sd:0.57,
+ desc:"猜疑、关系观念、被迫害感与敌意等偏执性思维倾向。"},
+{key:"psy",  name:"精神病性",     emoji:"🌙", ids:[6,15,34,61,76,83,84,86,87,89], x:1.29, sd:0.42,
+ desc:"幻觉、被动体验、奇特的思维等较严重的精神症状，也涵盖孤独与疏离体验。"},
+{key:"oth",  name:"其他",         emoji:"💤", ids:[18,43,58,59,63,65,88], x:1.38, sd:0.38,
+ desc:"主要反映睡眠与饮食状况（附加因子），用于补足 90 项的完整计分。"}
+];
+
+const OPTS = ["从无","轻度","中度","相当重","严重"];
+const STORAGE_KEY = "scl90_draft_naunian_xueliang";
+
+/* ===== 花瓣装饰 ===== */
+(function(){
+  const box = document.getElementById("petals");
+  const glyphs = ["🌸","🌷","✿","❀","🍡","🧸"];
+  for(let i=0;i<14;i++){
+    const s = document.createElement("span");
+    s.textContent = glyphs[i % glyphs.length];
+    s.style.left = (Math.random()*96+2)+"%";
+    s.style.fontSize = (14+Math.random()*16)+"px";
+    s.style.animationDuration = (16+Math.random()*22)+"s";
+    s.style.animationDelay = (-Math.random()*20)+"s";
+    box.appendChild(s);
+  }
+})();
+
+/* ===== 渲染题目 ===== */
+const qlist = document.getElementById("qlist");
+const frag = document.createDocumentFragment();
+QUESTIONS.forEach((text, i) => {
+  const card = document.createElement("div");
+  card.className = "q-card";
+  card.id = "q"+(i+1);
+  let opts = "";
+  OPTS.forEach((label, v) => {
+    opts += `<label class="opt">
+      <input type="radio" name="q${i+1}" value="${v}" data-q="${i}">
+      <div class="box"><div class="dot"></div><div class="num">${v}</div><div class="txt">${label}</div></div>
+    </label>`;
+  });
+  card.innerHTML = `<div class="q-top"><div class="q-no">${i+1}</div><div class="q-tag">${text}</div></div><div class="opts">${opts}</div>`;
+  frag.appendChild(card);
+});
+qlist.appendChild(frag);
+
+/* ===== 状态与交互 ===== */
+const answers = new Array(90).fill(null);
+const cards = Array.from(qlist.children);
+
+function answeredCount(){ return answers.filter(v=>v!==null).length; }
+
+function refresh(persist=true){
+  const done = answeredCount();
+  const pct = Math.round(done/90*100);
+  document.getElementById("pct").textContent = pct + "%";
+  document.getElementById("barFill").style.width = pct + "%";
+  document.getElementById("dockHint").textContent =
+    done === 90 ? "全部答完啦，点击查看结果 ✨" : `已答 ${done} / 90 · 进度自动保存在本机`;
+  document.getElementById("btn-submit").disabled = done !== 90;
+  cards.forEach((c, i)=> c.classList.toggle("answered", answers[i]!==null));
+  if(persist) save();
+}
+
+qlist.addEventListener("change", (e)=>{
+  const t = e.target;
+  if(t && t.name && t.name.startsWith("q") && t.value !== undefined){
+    answers[+t.dataset.q] = +t.value;
+    refresh();
+  }
+});
+
+function save(){
+  try{
+    if(answeredCount()===0){ localStorage.removeItem(STORAGE_KEY); }
+    else{ localStorage.setItem(STORAGE_KEY, JSON.stringify({answers, at:Date.now()})); }
+  }catch(e){}
+}
+function restore(){
+  try{
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if(!raw) return false;
+    const data = JSON.parse(raw);
+    if(!Array.isArray(data.answers) || data.answers.length!==90) return false;
+    const has = data.answers.some(v=>v!==null && v!==undefined);
+    if(!has) return false;
+    data.answers.forEach((v,i)=>{ if(v!==null && v!==undefined){ answers[i]=v;
+      const el = qlist.querySelector(`input[name="q${i+1}"][value="${v}"]`); if(el) el.checked = true;
+    }});
+    return true;
+  }catch(e){ return false; }
+}
+
+function showPage(id){
+  ["cover","quiz","result"].forEach(p=> document.getElementById("page-"+p).classList.add("hidden"));
+  document.getElementById("page-"+id).classList.remove("hidden");
+  window.scrollTo({top:0});
+}
+
+document.getElementById("btn-start").onclick = ()=>{
+  const resumed = restore();
+  refresh();
+  showPage("quiz");
+};
+document.getElementById("btn-resume").onclick = ()=>{ restore(); refresh(); showPage("quiz"); };
+document.getElementById("btn-save-quit").onclick = ()=>{ save(); showPage("cover"); };
+
+document.getElementById("btn-submit").onclick = ()=>{
+  if(answeredCount() !== 90){
+    const idx = answers.findIndex(v=>v===null);
+    const el = document.getElementById("q"+(idx+1));
+    el.scrollIntoView({behavior:"smooth", block:"center"});
+    el.classList.remove("shake"); void el.offsetWidth; el.classList.add("shake");
+    return;
+  }
+  save();
+  renderResult();
+  showPage("result");
+};
+
+/* ===== 计分 ===== */
+function compute(){
+  const total = answers.reduce((a,b)=>a+(b||0),0);
+  const posCount = answers.filter(v=>v>=1).length;
+  const mean = (total/90);
+  const posMean = posCount>0 ? (total/posCount) : 0;
+  const factors = FACTORS.map(f=>{
+    const sum = f.ids.reduce((a,i)=>a+(answers[i]||0),0);
+    const score = sum/f.ids.length;
+    const xPlus = +(f.x + f.sd).toFixed(2);
+    let level = 0;               // 0 正常 1 偏高 2 需关注
+    if(score >= xPlus) level = 2;
+    else if(score >= f.x) level = 1;
+    return {...f, score:+score.toFixed(2), xPlus, level,
+      high: f.ids.map(i=>i+1).filter(i=>(answers[i-1]||0)>=2)};
+  });
+  factors.sort((a,b)=>b.score-a.score);
+  return {total, posCount, mean:+mean.toFixed(2), posMean:+posMean.toFixed(2), factors};
+}
+
+function totalTier(total, posCount){
+  if(total < 130) return {cls:"tier-0", tag:"状态不错", text:"各维度总体在正常参考范围内，继续保持现在的节奏就很好。"};
+  if(posCount < 43 && total < 160) return {cls:"tier-1", tag:"略有波动", text:"总体仍在参考范围内，但个别项目有些波动，可以留意下方标出的维度。"};
+  if(total < 190) return {cls:"tier-2", tag:"轻度提示", text:"部分维度出现较为明显的困扰，建议放慢节奏、好好休息，并关注下方需要留意的方面。"};
+  if(total < 220) return {cls:"tier-3", tag:"中度提示", text:"多个维度得分偏高，近期可能比较辛苦。建议寻求学校或医院心理中心的进一步评估与支持。"};
+  return {cls:"tier-4", tag:"明显困扰", text:"多个维度明显偏高，这不是你的错。建议尽快联系专业的心理咨询师或精神科医生，获得系统的帮助。"};
+}
+
+/* ===== 结果渲染 ===== */
+function renderResult(){
+  const r = compute();
+  const tier = totalTier(r.total, r.posCount);
+  const alerts = r.factors.filter(f=>f.level===2);
+  const mids   = r.factors.filter(f=>f.level===1);
+
+  const fCards = r.factors.map(f=>{
+    const chip = f.level===2 ? '<span class="f-chip chip-hi">需关注</span>'
+               : f.level===1 ? '<span class="f-chip chip-mid">略偏高</span>'
+               : '<span class="f-chip chip-ok">正常</span>';
+    const w = Math.min(100, f.score/4*100);
+    const mx = Math.min(100, f.x/4*100), hx = Math.min(100, f.xPlus/4*100);
+    const desc = (f.level>0) ? `<div class="f-desc">💬 ${f.desc}</div>` : "";
+    const items = (f.level===2 && f.high.length) ?
+      `<div class="f-note">困扰较明显的项目（≥中度）：第 ${f.high.join("、")} 题</div>` :
+      `<div class="f-note">偏高线 ${f.x.toFixed(2)} · 关注线 ${f.xPlus}（中国正常人群常模）</div>`;
+    return `<div class="f-card ${f.level===2?"alert":""}">
+      <div class="f-top">
+        <div class="f-emoji">${f.emoji}</div>
+        <div class="f-name">${f.name}维度<small>${f.desc.slice(0,18)}…</small></div>
+        ${chip}
+        <div class="f-score ${f.level===2?"warn":""}">${f.score.toFixed(2)}</div>
+      </div>
+      <div class="f-bar"><i style="width:${w}%"></i>
+        <span class="f-mark" style="left:${mx}%"></span>
+        <span class="f-mark hl" style="left:${hx}%"></span>
+      </div>
+      ${items}
+      ${desc}
+    </div>`;
+  }).join("");
+
+  const alertCards = alerts.map(f => {
+    const note = f.high.length
+      ? `<div class="f-note">困扰较明显的项目：第 ${f.high.join("、")} 题</div>`
+      : "";
+    return `<div class="f-card alert">
+      <div class="f-top"><div class="f-emoji">${f.emoji}</div>
+      <div class="f-name">${f.name}维度 <small>得分 ${f.score.toFixed(2)}（关注线 ${f.xPlus}）</small></div></div>
+      <div class="f-desc">📖 ${f.desc}</div>
+      ${note}
+    </div>`;
+  }).join("");
+
+  const alertBlock = alerts.length
+    ? `<div class="sec-title">🌷 建议留意的维度</div>${alertCards}`
+    : "";
+
+  const okBlock = (!alerts.length && !mids.length) ?
+    `<div class="notice"><b>🌈 好消息：</b>10 个维度都在正常参考范围内，最近的你有在好好照顾自己。继续保持，需要时随时回来看看。</div>` :
+    (!alerts.length ? `<div class="notice"><b>🌈 整体平稳：</b>各维度没有明显越线的情况，个别维度略偏高（${mids.map(f=>f.name).join("、")}），注意休息与自我关怀即可。</div>` : "");
+
+  const res = document.getElementById("page-result");
+  res.innerHTML = `
+  <div class="res-head">
+    <div class="kicker">测 评 结 果 · 仅 你 可 见</div>
+    <div class="score-big">${r.total}</div>
+    <div class="score-cap">总分（90 项之和 · 参考值 &lt; 160）</div>
+    <div class="res-tier ${tier.cls}">${tier.tag} ${tier.cls==="tier-0"?"🌸":tier.cls==="tier-1"?"🌤️":"🫶"}</div>
+    <p class="res-summary">${tier.text}</p>
+  </div>
+
+  <div class="stats">
+    <div class="stat"><div class="v ${r.total>=160?"warn":""}">${r.total}</div><div class="k">总分（&lt;160 参考）</div></div>
+    <div class="stat"><div class="v ${r.mean>=2?"warn":""}">${r.mean.toFixed(2)}</div><div class="k">总均分（&lt;2 参考）</div></div>
+    <div class="stat"><div class="v ${r.posCount>=43?"warn":""}">${r.posCount}</div><div class="k">阳性项目数（&lt;43 参考）</div></div>
+    <div class="stat"><div class="v ${r.posMean>2?"warn":""}">${r.posMean ? r.posMean.toFixed(2) : "—"}</div><div class="k">阳性症状均分（&gt;2 参考）</div></div>
+  </div>
+
+  <div class="sec-title">📊 10 个维度得分</div>
+  ${fCards}
+  ${alertBlock}
+  ${okBlock}
+
+  <div class="notice">
+    <b>🌷 温柔提醒</b><br>
+    · 本结果依据 SCL-90 标准计分法（0–4 分五级）与中国正常人群常模生成，用于自我了解与觉察，<b>不是医疗诊断</b>。<br>
+    · 若「想结束自己的生命」等题目得分不为 0，或有持续的情绪低落，请认真对待：联系身边的朋友、家人、学校心理中心，或拨打当地心理援助热线（如全国 24 小时心理援助 400-161-9995 之外的地区热线，或直接前往就近医院心理科）。<br>
+    · 你可以把本页<b>打印 / 另存为 PDF</b> 留作记录，隔 1–2 个月再测一次，观察变化趋势。
+  </div>
+
+  <div class="res-actions">
+    <button class="btn btn-ghost" onclick="window.print()">🖨️ 打印 / 存 PDF</button>
+    <button class="btn btn-ghost" id="btn-export">📥 下载报告</button>
+    <button class="btn btn-ghost" id="btn-retest">↻ 重新测试</button>
+    <button class="btn btn-primary" id="btn-back">回到首页</button>
+  </div>`;
+
+  document.getElementById("btn-retest").onclick = ()=>{
+    answers.fill(null);
+    qlist.querySelectorAll("input:checked").forEach(i=>i.checked=false);
+    refresh(); showPage("quiz");
+  };
+  document.getElementById("btn-back").onclick = ()=> showPage("cover");
+  document.getElementById("btn-export").onclick = exportReport;
+}
+
+/* ===== 导出独立报告 ===== */
+function exportReport(){
+  const r = compute();
+  const tier = totalTier(r.total, r.posCount);
+  const alerts = r.factors.filter(f=>f.level===2);
+  const dateStr = new Date().toLocaleString("zh-CN", {dateStyle:"medium", timeStyle:"short"});
+  const cards = r.factors.map(f=>{
+    const chip = f.level===2?"需关注":f.level===1?"略偏高":"正常";
+    return `<tr><td>${f.emoji} ${f.name}维度</td><td><b>${f.score.toFixed(2)}</b></td><td>${f.xPlus}</td><td>${chip}</td></tr>`;
+  }).join("");
+  const alertList = alerts.length
+    ? alerts.map(f=>`<li><b>${f.name}维度</b>（得分 ${f.score.toFixed(2)}，关注线 ${f.xPlus}）：${f.desc}${f.high.length?"<br>困扰较明显项目：第 "+f.high.join("、")+" 题":""}</li>`).join("")
+    : "<li>没有明显越线的维度。</li>";
+
+  const html = `<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><title>SCL-90 测评报告</title>
+<style>
+body{font-family:"PingFang SC","Microsoft YaHei",sans-serif;color:#4A3B47;background:#FFF6F3;margin:0;padding:32px;line-height:1.7}
+.card{max-width:680px;margin:auto;background:#fff;border-radius:20px;box-shadow:0 10px 30px rgba(224,89,123,.12);padding:32px}
+h1{font-size:22px;margin:0 0 4px} .sub{color:#8A7480;font-size:13px;margin-bottom:20px}
+.tier{display:inline-block;background:${tier.cls==="tier-0"?"#E4F5F0":tier.cls==="tier-1"?"#FBEEDC":tier.cls==="tier-2"?"#F9D9E0":tier.cls==="tier-3"?"#FADCE4":"#F3D2DC"};
+padding:6px 16px;border-radius:999px;font-size:14px;font-weight:700;margin:8px 0 16px}
+.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:16px 0}
+.stat{text-align:center;background:#FDF0F3;border-radius:14px;padding:12px}
+.stat .v{font-size:22px;font-weight:800;color:#C4415F}.stat .k{font-size:11px;color:#B9A6B0}
+table{width:100%;border-collapse:collapse;font-size:13.5px;margin:8px 0}
+th,td{padding:8px 6px;border-bottom:1px solid #F3E2E8;text-align:left}
+th{color:#8A7480;font-weight:600;font-size:12px}
+ol{font-size:13px;color:#4E6B62;padding-left:20px}
+.tip{margin-top:20px;font-size:12.5px;color:#B9A6B0;border-top:1px dashed #F3E2E8;padding-top:14px}
+</style></head><body><div class="card">
+<h1>🌸 SCL-90 心理自查报告</h1>
+<div class="sub">测评时间：${dateStr} · 设计：那年的雪糕 · 结果仅本人可见</div>
+<div class="tier">${tier.tag}</div>
+<div class="grid">
+<div class="stat"><div class="v">${r.total}</div><div class="k">总分(&lt;160)</div></div>
+<div class="stat"><div class="v">${r.mean.toFixed(2)}</div><div class="k">总均分(&lt;2)</div></div>
+<div class="stat"><div class="v">${r.posCount}</div><div class="k">阳性项目(&lt;43)</div></div>
+<div class="stat"><div class="v">${r.posMean?r.posMean.toFixed(2):"—"}</div><div class="k">阳性均分(&gt;2)</div></div>
+</div>
+<table><thead><tr><th>维度</th><th>得分</th><th>关注线</th><th>状态</th></tr></thead>
+<tbody>${cards}</tbody></table>
+<h3 style="font-size:14px">🌷 建议留意的维度</h3><ol>${alertList}</ol>
+<div class="tip">本报告依据 SCL-90 标准计分法（0–4 分）与中国正常人群常模生成，仅供自我了解与觉察，非医疗诊断。若有明显困扰，建议寻求学校/医院心理中心的帮助。</div>
+</div></body></html>`;
+
+  const blob = new Blob([html], {type:"text/html;charset=utf-8"});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "SCL-90_测评报告_" + new Date().toISOString().slice(0,10) + ".html";
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(()=>{ URL.revokeObjectURL(url); a.remove(); }, 1000);
+}
+
+/* ===== 初始化：有存档则显示「继续」 ===== */
+(function(){
+  let has = false;
+  try{
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if(raw){ const d = JSON.parse(raw); has = Array.isArray(d.answers) && d.answers.some(v=>v!==null && v!==undefined); }
+  }catch(e){}
+  if(has) document.getElementById("btn-resume").classList.remove("hidden");
+  refresh(false); /* 初始化不写回存储，避免覆盖已有进度 */
+})();
+</script>
+</body>
+</html>
